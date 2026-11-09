@@ -94,9 +94,9 @@ Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (err
 ## Notes for the workshop
 
 - **Save Image («حفظ»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the JPEG to the gallery's Downloads.
-- **Open Instagram («Instagram»):** opens the Instagram home feed, where students tap + to post the Story. Android uses an intent link (opens the app, or its Play Store page). iPhone uses `https://www.instagram.com/`, which iOS hands to the Instagram app when it is installed.
+- **Open Instagram («Instagram»):** opens the club's profile, `https://www.instagram.com/ucas.it.club/`. The «افتح Instagram» button in the Story-steps sheet opens the home feed, where students tap + to post. Android uses an intent link for the same path (opens the app, or its Play Store page). On iPhone, iOS hands instagram.com links to the Instagram app when it is installed.
 - **Scanner browsers:** some QR scanner apps open links in their own built-in browser, which can block downloads. If Save does nothing, open the page in Safari or Chrome.
-- **Story steps:** once a student has saved the image and copied the text, a sheet opens with five steps (open Instagram, pick the image, paste the text, add the **@ucas.it.club** mention sticker, share). «كيف أنشر الستوري؟» opens it any time.
+- **Story steps:** once a student has saved the image and copied the text, a sheet opens with five steps (open Instagram, pick the image, paste the text, add the **@ucas.it.club** mention sticker, share). «كيف اشاركها مع النادي؟» opens it any time.
 - Instagram cannot be filled in from a web page, so students paste the text and add the mention by hand.
 
 ## License

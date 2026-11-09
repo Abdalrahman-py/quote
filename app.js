@@ -13,7 +13,6 @@ const C = {
   blue: "#1864bc", teal: "#00a19a", green: "#73bf49",
 };
 const FONT = '"Cairo", system-ui, sans-serif';
-const IG_ANDROID = "intent://instagram.com/#Intent;package=com.instagram.android;scheme=https;end";
 // JPEG: about a tenth the size of PNG for this card, and every phone and Instagram take it
 // (canvas WebP export is missing in Safari).
 const FILE_NAME = "ucas-it-club-quote.jpg", MIME = "image/jpeg", QUALITY = 0.92;
@@ -399,9 +398,9 @@ $("copy").addEventListener("click", async () => {
   try { window.prompt("انسخ النص:", text); markDone("copy"); } catch { say("تعذّر النسخ"); }
 });
 
-// Both open the Instagram home feed, where students tap + to post a Story.
-// Android: intent URL (opens the app, or its Play Store page if missing).
-// iPhone and others follow the href https://www.instagram.com/: Instagram's
+// The main button opens the club's profile; the Story-steps sheet opens the home feed (tap + there).
+// Android: intent URL for the same path (opens the app, or its Play Store page if missing).
+// iPhone and others follow the href on instagram.com: Instagram's
 // apple-app-site-association claims "/*", so iOS opens the app when installed
 // and Safari when not. Used instead of instagram://app, which makes Safari ask
 // "Open in Instagram?" and shows an error page if the app is missing.
@@ -411,7 +410,10 @@ let igTap = 0;
 for (const a of document.querySelectorAll("[data-ig]")) a.addEventListener("click", (e) => {
   track("instagram");
   igTap = Date.now();
-  if (/Android/i.test(navigator.userAgent)) { e.preventDefault(); location.href = IG_ANDROID; }
+  if (/Android/i.test(navigator.userAgent)) {
+    e.preventDefault();
+    location.href = `intent://instagram.com${new URL(a.href).pathname}#Intent;package=com.instagram.android;scheme=https;end`;
+  }
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden && Date.now() - igTap < 3000) { igTap = 0; track("instagram-opened"); }
