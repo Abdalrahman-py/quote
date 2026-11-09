@@ -56,21 +56,60 @@ header { display: flex; align-items: center; justify-content: center; gap: 8px; 
 header img { height: 32px; width: auto; }
 h1 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--fg); }
 
-/* The card is the page. Everything else is sized around it. */
-.stage { position: relative; margin: 0; }
-#card {
-  display: block;
-  height: clamp(300px, calc(100vh - 270px), 680px); /* older phones without svh */
-  height: clamp(300px, calc(100svh - 270px), 680px);
+/* The card is the page. Everything else is sized around it.
+   Side cards stick out past the column, so the page clips horizontal overflow. */
+html, body { overflow-x: hidden; overflow-x: clip; }
+.stage {
+  position: relative;
+  margin: 0;
+  height: clamp(300px, calc(100vh - 218px), 680px); /* older phones without svh */
+  height: clamp(300px, calc(100svh - 218px), 680px);
+  touch-action: pan-y; /* horizontal drags are ours, vertical still scrolls */
+  -webkit-user-select: none;
+  user-select: none;
+  cursor: grab;
+}
+.stage.dragging { cursor: grabbing; }
+.stage:focus-visible { outline: none; }
+.stage:focus-visible .card.on { outline: 2px solid var(--primary); outline-offset: 3px; }
+.card {
+  position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  height: 100%;
   width: auto;
-  max-width: 100%;
   margin: 0 auto;
   border-radius: 20px;
   background: var(--bg);
   outline: 1px solid var(--line);
   box-shadow: 0 24px 48px -24px rgb(0 0 0 / .7);
+  transition: opacity .25s;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: default; /* long-press to save still works on iPhone */
 }
+.stage.moving .card { transition: transform .38s cubic-bezier(.22, .8, .24, 1), opacity .38s; }
+.stage.dragging .card { transition: none; }
+.card.loading { opacity: 0 !important; } /* hide a recycled card until its new image is in */
+/* Card-shaped placeholder while the files load on a slow network. */
+.wait {
+  position: absolute;
+  top: 0; bottom: 0; left: 0; right: 0;
+  height: 100%;
+  aspect-ratio: 9 / 16;
+  margin: 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: .95rem;
+  font-weight: 700;
+  animation: wait-pulse 1.6s ease-in-out infinite;
+}
+.stage.ready .wait { display: none; }
+@keyframes wait-pulse { 50% { opacity: .55; } }
 #status {
+  z-index: 5;
   position: absolute;
   left: 0;
   right: 0;
@@ -114,35 +153,15 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
 }
 .step svg { width: 22px; height: 22px; color: var(--primary); }
 
-/* Card controls: quiet chips under the steps. */
-.chips { display: flex; justify-content: center; gap: 8px; }
-.chips button {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 40px;
-  padding: 4px 14px 4px 12px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--muted);
-  font-size: .85rem;
-  font-weight: 700;
-  line-height: 1.2;
-}
-.chips svg { width: 16px; height: 16px; }
-.chips button[aria-pressed="true"] { color: var(--primary); border-color: var(--primary); }
-.chips button:disabled { opacity: .4; cursor: not-allowed; }
-
 /* Brand gradient layer + light sheen, shown on hover
    (and while pressed on touch). */
-.step, .chips button {
+.step {
   position: relative;
   isolation: isolate;
   overflow: hidden;
   transition: transform .15s, color .25s, border-color .25s;
 }
-.step::before, .chips button::before {
+.step::before {
   content: "";
   position: absolute;
   top: -1px; right: -1px; bottom: -1px; left: -1px;
@@ -151,7 +170,7 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
   opacity: 0;
   transition: opacity .3s;
 }
-.step::after, .chips button::after {
+.step::after {
   content: "";
   position: absolute;
   top: 0; right: 0; bottom: 0; left: 0;
@@ -161,17 +180,17 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
 }
 
 @media (hover: hover) {
-  .step:hover, .chips button:hover:not(:disabled) { color: #fff; border-color: transparent; }
+  .step:hover { color: #fff; border-color: transparent; }
   .step:hover svg { color: #fff; }
-  .step:hover::before, .chips button:hover:not(:disabled)::before { opacity: 1; }
-  .step:hover::after, .chips button:hover:not(:disabled)::after {
+  .step:hover::before { opacity: 1; }
+  .step:hover::after {
     transform: translateX(110%);
     transition: transform .8s cubic-bezier(.16, 1, .3, 1);
   }
 }
-.step:active, .chips button:active:not(:disabled) { color: #fff; border-color: transparent; transform: scale(.96); }
+.step:active { color: #fff; border-color: transparent; transform: scale(.96); }
 .step:active svg { color: #fff; }
-.step:active::before, .chips button:active:not(:disabled)::before { opacity: 1; }
+.step:active::before { opacity: 1; }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 
 .step.done { border-color: var(--accent); }

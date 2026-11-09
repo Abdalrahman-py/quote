@@ -14,21 +14,21 @@ const C = {
 };
 const FONT = '"Cairo", system-ui, sans-serif';
 const IG_ANDROID = "intent://instagram.com/#Intent;package=com.instagram.android;scheme=https;end";
-const FILE_NAME = "ucas-it-club-quote.png";
+// JPEG: about a tenth the size of PNG for this card, and every phone and Instagram take it
+// (canvas WebP export is missing in Safari).
+const FILE_NAME = "ucas-it-club-quote.jpg", MIME = "image/jpeg", QUALITY = 0.92;
 
 const $ = (id) => document.getElementById(id);
-const preview = $("card");
+const stage = $("stage");
 const canvas = Object.assign(document.createElement("canvas"), { width: W, height: H });
 const ctx = canvas.getContext("2d");
 const logo = new Image();
 
-let current = null, showTr = false, blob = null, seq = 0;
-let lastIdx = -1;
-try { lastIdx = Number(sessionStorage.getItem("lastQuote") ?? -1); } catch {}
+let current = null, seq = 0;
 
-// Arabic by default; the "English" toggle swaps the whole quote.
-const textOf = (q, en = showTr) => (en ? q.en : q.ar).trim();
-const byOf = (q, en = showTr) => (q.by ? (en ? q.by.en : q.by.ar) : ""); // stale cached quotes.js has no "by"
+const textOf = (q) => q.ar.trim();
+// An older cached quotes.js may have no "by", or by as { ar, en }.
+const byOf = (q) => (typeof q.by === "string" ? q.by : q.by?.ar || "");
 const BY_FONT = `600 38px ${FONT}`;
 
 // Greedy word wrap measured with the real font. Arabic words never break
@@ -47,21 +47,20 @@ function wrap(text, font, maxW) {
 }
 
 // Largest font size whose quote fits the box.
-function layout(q, en = showTr) {
-  const rtl = !en, text = textOf(q, en);
+function layout(q) {
+  const text = textOf(q);
   let L;
+  ctx.direction = "rtl";
   for (let size = 84; size >= 40; size -= 4) {
-    ctx.direction = rtl ? "rtl" : "ltr";
     const font = `900 ${size}px ${FONT}`;
     const lines = wrap(text, font, MAX_W);
     const fitsWidth = lines.every((l) => ctx.measureText(l).width <= MAX_W);
-    const lh = size * (rtl ? 1.55 : 1.25);
-    L = { rtl, text, font, lines, lh, total: lines.length * lh };
+    const lh = size * 1.55;
+    L = { text, font, lines, lh, total: lines.length * lh };
     if (fitsWidth && L.total <= BOX_H) break;
   }
   // Balance lines: narrowest width that keeps the same line count (no one-word last line).
   if (L.lines.length > 1) {
-    ctx.direction = rtl ? "rtl" : "ltr";
     let lo = MAX_W / 2, hi = MAX_W;
     while (hi - lo > 4) {
       const mid = (lo + hi) / 2;
@@ -128,7 +127,6 @@ function draw(q) {
   const ink = ctx.createLinearGradient(PAD, y, W - PAD, y + qh);
   ink.addColorStop(0.1, C.primary);
   ink.addColorStop(0.9, C.accent);
-  ctx.direction = L.rtl ? "rtl" : "ltr";
   ctx.font = L.font;
   ctx.fillStyle = ink;
   for (const line of L.lines) { ctx.fillText(line, W / 2, y + L.lh / 2); y += L.lh; }
@@ -139,39 +137,147 @@ function draw(q) {
   if (byOf(q)) ctx.fillText("— " + byOf(q), W / 2, y + 60);
 }
 
-function render(q) {
-  current = q;
+// Draw q into one card <img>. toBlob copies the canvas when called, so the
+// shared canvas can be redrawn for the next card right away.
+function paint(el, q) {
+  const mine = String(++seq);
+  el.dataset.seq = mine;
+  el.q = q;
+  el.blob = null;
+  el.classList.add("loading");
   draw(q);
-  resetDone(); // new image and text: save and copy again
-  $("tr").setAttribute("aria-pressed", String(showTr));
-  $("tr-label").textContent = showTr ? "العربية" : "English";
-  $("tr-label").lang = showTr ? "ar" : "en";
-  preview.alt = textOf(q);
-  const mine = ++seq;
-  blob = null;
   canvas.toBlob((b) => {
-    if (mine !== seq) return; // a newer render started
-    blob = b;
-    if (preview.src.startsWith("blob:")) URL.revokeObjectURL(preview.src);
-    preview.src = URL.createObjectURL(b);
-  }, "image/png");
+    if (el.dataset.seq !== mine) return; // repainted since
+    if (el.src.startsWith("blob:")) URL.revokeObjectURL(el.src);
+    el.blob = b;
+    el.src = URL.createObjectURL(b);
+  }, MIME, QUALITY);
 }
 
-function pickQuote() {
-  let i;
-  do i = Math.floor(Math.random() * QUOTES.length);
-  while (QUOTES.length > 1 && i === lastIdx);
-  lastIdx = i;
-  try { sessionStorage.setItem("lastQuote", String(i)); } catch {}
-  render(QUOTES[i]);
+// The quotes are a shuffled ring.
+// Like a RecyclerView: five card <img>s. slides[2] is the current card, slides[1] the previous (right side),
+// slides[3] the next (left side; the page is RTL). slides[0] and slides[4] sit hidden one step further out,
+// already drawn, so the card that slides in is always ready.
+const ORDER = QUOTES.map((_, i) => i);
+for (let i = ORDER.length - 1; i > 0; i--) {
+  const j = Math.floor(Math.random() * (i + 1));
+  [ORDER[i], ORDER[j]] = [ORDER[j], ORDER[i]];
 }
+let pos = 0, drag = 0, busy = false;
+let slides = [...stage.querySelectorAll(".card")];
+const MID = 2;
+const at = (d) => QUOTES[ORDER[(((pos + d) % ORDER.length) + ORDER.length) % ORDER.length]];
+const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const TURN_MS = REDUCE ? 0 : 380;
+
+for (const el of slides) el.addEventListener("load", () => { el.classList.remove("loading"); stage.classList.add("ready"); });
+
+// Cards sit flat in a row: offset +1 right, 0 middle, -1 left.
+// drag (-1..1) slides the row; positive brings the next card to the middle.
+function place(animate) {
+  stage.classList.toggle("moving", animate);
+  slides.forEach((el, k) => {
+    const o = Math.max(-2.6, Math.min(2.6, MID - k + drag)), a = Math.abs(o);
+    el.style.transform = `translateX(calc(${o} * (100% + 14px))) scale(${1 - Math.min(a, 1) * 0.08})`;
+    el.style.opacity = String(Math.max(0, 1 - a * 0.55));
+    el.style.zIndex = String(5 - Math.round(a * 2));
+    el.classList.toggle("on", k === MID);
+  });
+}
+
+function showCurrent() {
+  current = at(0);
+  resetDone(); // new image and text: save and copy again
+  slides.forEach((el, k) => {
+    el.alt = k === MID ? textOf(current) : "";
+    el.setAttribute("aria-hidden", String(k !== MID));
+  });
+}
+
+// Make sure a card shows the quote for the position it holds now (skip if it already does).
+function fill(el, force) {
+  const q = at(slides.indexOf(el) - MID);
+  if (force || el.q !== q) paint(el, q);
+}
+// Fill when the browser is idle, so drawing never stalls a swipe. Safari has no requestIdleCallback.
+const idle = window.requestIdleCallback || ((f) => setTimeout(f, 16));
+const fillLater = (el, force) => idle(() => fill(el, force), { timeout: 600 });
+
+// Current card first, then its neighbours, then the hidden buffers. force: redraw all (fonts arrived late).
+function paintAll(force) {
+  fill(slides[MID], force);
+  for (const k of [MID + 1, MID - 1, MID + 2, MID - 2]) fillLater(slides[k], force);
+  showCurrent();
+}
+
+// dir +1: next quote, -1: previous. The hidden card that falls off one end is recycled to the other end.
+function turn(dir) {
+  if (busy) return;
+  busy = true;
+  fill(slides[MID + 2 * dir]); // very fast swipes: the hidden card that becomes a side card must be drawn now
+  drag = dir;
+  place(true);
+  setTimeout(() => {
+    pos += dir;
+    if (dir > 0) slides.push(slides.shift()); else slides.unshift(slides.pop());
+    drag = 0;
+    place(false);
+    fillLater(slides[dir > 0 ? slides.length - 1 : 0]); // recycled card, now hidden on the far side
+    showCurrent();
+    busy = false;
+  }, TURN_MS);
+}
+
+// Swipe: follow the finger, then turn if it went far or fast enough. A tap on a side card turns to it.
+let x0 = null, t0 = 0, moved = false;
+stage.addEventListener("pointerdown", (e) => {
+  if (busy || e.button > 0) return;
+  x0 = e.clientX; t0 = performance.now(); moved = false;
+});
+stage.addEventListener("pointermove", (e) => {
+  if (x0 === null) return;
+  const dx = e.clientX - x0;
+  if (!moved && Math.abs(dx) < 8) return;
+  if (!moved) { moved = true; stage.setPointerCapture?.(e.pointerId); stage.classList.add("dragging"); }
+  drag = Math.max(-1, Math.min(1, dx / slides[MID].offsetWidth));
+  place(false);
+});
+function release(e) {
+  if (x0 === null) return;
+  x0 = null;
+  stage.classList.remove("dragging");
+  if (!moved) {
+    const k = slides.indexOf(e.target);
+    if (e.type === "pointerup" && (k === MID - 1 || k === MID + 1)) turn(k > MID ? 1 : -1);
+    return;
+  }
+  const fast = Math.abs(drag) > 0.06 && performance.now() - t0 < 250;
+  if (Math.abs(drag) > 0.22 || fast) return turn(Math.sign(drag));
+  drag = 0;
+  place(true); // spring back
+  setTimeout(() => stage.classList.remove("moving"), TURN_MS);
+}
+stage.addEventListener("pointerup", release);
+stage.addEventListener("pointercancel", release);
+stage.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowLeft") { e.preventDefault(); turn(1); }   // next card is on the left
+  if (e.key === "ArrowRight") { e.preventDefault(); turn(-1); }
+});
 
 // Anonymous counts on GoatCounter, no cookies: https://abdalrahmanpy.goatcounter.com
 // Same request GoatCounter's count.js makes (beacon, image fallback). A name without a
 // leading "/" is an event; "/" is the page visit. Local test runs are not counted.
+// Test mode: open the page once with ?test and this browser stops counting; ?test=off counts it again.
 const GC = "https://abdalrahmanpy.goatcounter.com/count";
+let testMode = false;
+try {
+  const t = new URLSearchParams(location.search).get("test");
+  if (t === "off") localStorage.removeItem("gcTest");
+  else if (t !== null) localStorage.setItem("gcTest", "1");
+  testMode = localStorage.getItem("gcTest") === "1";
+} catch {} // storage blocked: counts as usual
 function track(name) {
-  if (location.protocol === "file:" || /^(localhost|127\.|\[::1\])/.test(location.hostname)) return;
+  if (testMode || location.protocol === "file:" || /^(localhost|127\.|\[::1\])/.test(location.hostname)) return;
   const q = new URLSearchParams({ p: name, rnd: Math.random().toString(36).slice(2) });
   if (!name.startsWith("/")) q.set("e", "1");
   else if (document.referrer) q.set("r", document.referrer);
@@ -206,7 +312,7 @@ async function copyText(text) {
   return ok;
 }
 
-function download() {
+function download(blob) {
   const url = URL.createObjectURL(blob);
   const a = Object.assign(document.createElement("a"), { href: url, download: FILE_NAME });
   document.body.append(a);
@@ -248,13 +354,14 @@ guide.addEventListener("click", (e) => { if (e.target === guide) closeGuide(); }
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
 $("save").addEventListener("click", async () => {
+  const blob = slides[MID].blob;
   if (!blob) return say("لحظة…");
-  const file = new File([blob], FILE_NAME, { type: "image/png" });
+  const file = new File([blob], FILE_NAME, { type: MIME });
   if (IOS && navigator.canShare?.({ files: [file] })) {
     try { await navigator.share({ files: [file] }); markDone("save"); return; }
     catch (e) { if (e.name === "AbortError") return; }
   }
-  download();
+  download(blob);
   markDone("save");
 });
 
@@ -282,38 +389,34 @@ document.addEventListener("visibilitychange", () => {
   if (document.hidden && Date.now() - igTap < 3000) { igTap = 0; track("instagram-opened"); }
 });
 
-$("next").addEventListener("click", pickQuote);
-
-$("tr").addEventListener("click", () => { showTr = !showTr; render(current); });
 
 function selfTest() {
   for (const q of QUOTES) {
-    for (const en of [false, true]) {
-      ctx.font = BY_FONT;
-      console.assert(ctx.measureText("— " + byOf(q, en)).width <= MAX_W, "attribution wider than card", q);
-      const L = layout(q, en);
-      ctx.font = L.font;
-      console.assert(L.lines.join(" ") === L.text.split(/\s+/).join(" "), "wrap lost or reordered words", q);
-      console.assert(L.lines.every((l) => ctx.measureText(l).width <= MAX_W), "line wider than card", q);
-      console.assert(L.total <= BOX_H, "quote overflows safe box", q, L);
-    }
+    ctx.font = BY_FONT;
+    console.assert(ctx.measureText("— " + byOf(q)).width <= MAX_W, "attribution wider than card", q);
+    const L = layout(q);
+    ctx.font = L.font;
+    console.assert(L.lines.join(" ") === L.text.split(/\s+/).join(" "), "wrap lost or reordered words", q);
+    console.assert(L.lines.every((l) => ctx.measureText(l).width <= MAX_W), "line wider than card", q);
+    console.assert(L.total <= BOX_H, "quote overflows safe box", q, L);
   }
   console.log("selftest done:", QUOTES.length, "quotes");
 }
 
 (async () => {
   logo.src = "assets/ucas-logo.webp";
-  try {
-    await Promise.race([
-      Promise.all([
-        document.fonts.load(`900 80px "Cairo"`, "نادي"),
-        document.fonts.load(`900 80px "Cairo"`, "UCAS"),
-        logo.decode(),
-      ]),
-      new Promise((r) => setTimeout(r, 4000)), // slow network: draw with what has arrived
-    ]);
-  } catch {} // logo failed: card draws without it
+  const assets = Promise.all([
+    document.fonts.load(`900 80px "Cairo"`, "نادي"),
+    document.fonts.load(`600 38px "Cairo"`, "— 0"), // Latin file: dash and digits in the attribution
+    logo.decode(),
+  ]).catch(() => {}); // logo failed: card draws without it
+  let late = false;
+  // Slow network: after 4 s draw with what has arrived, and redraw once the fonts and logo are in.
+  await Promise.race([assets, new Promise((r) => setTimeout(() => { late = true; r(); }, 4000))]);
   if (location.search.includes("selftest")) selfTest();
-  pickQuote();
+  place(false);
+  paintAll();
+  assets.then(() => { if (late) paintAll(true); });
+  if (testMode) say("وضع التجربة: لن تُحتسب ضغطاتك");
   track("/");
 })();

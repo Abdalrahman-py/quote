@@ -1,15 +1,16 @@
 # UCAS IT Club: Quote Card
 
 A static page for the workshop QR code. Each visitor gets a random quote card
-(1080x1920 PNG) and posts it as an Instagram Story that mentions **@ucas.it.club**.
+(1080x1920 JPEG) and posts it as an Instagram Story that mentions **@ucas.it.club**.
 
 No framework, no build step, no backend, no CDN. Total size is about 85 KB.
 
 The look follows the club website (`ucas-it-club` repo, `master` branch): Cairo,
 brand blue `#1864BC` and green `#73BF49`, navy ink, the 44px grid with soft glows,
 the logo mark above «النادي التكنولوجي», gradient display text and gradient pill buttons.
-The card and the page use the site's dark theme only. The page is one screen: the card,
-two small controls (new quote, English/Arabic),
+The page header reads «انشرنا على قصتك».
+The card and the page use the site's dark theme only. The page is one screen: a row of cards
+(swipe sideways, tap a side card, or use the arrow keys for another quote),
 and three step buttons: Save, Copy, Open Instagram.
 
 ```
@@ -46,22 +47,22 @@ The page needs HTTPS for the Clipboard API and the iPhone share sheet. GitHub Pa
 
 ## Add or change quotes
 
-Edit `quotes.js`. Each entry is one object with both languages and the attribution shown under the quote:
+Edit `quotes.js`. Each entry is one object: the quote and the attribution shown under it:
 
 ```js
-{ ar: "النص العربي", en: "English version", by: { ar: "القائل", en: "Author" } },
+{ ar: "النص العربي", by: "القائل" },
 ```
 
 Every quote is real and attributed. Sources, hadith gradings and notes are in `docs/quotes-research.md`; the `/* n */` before each entry is its number there.
 
-- The card shows `ar` by default. The "English" button swaps the whole quote to `en`, and «نسخ النص» copies whichever language is showing (the quote only).
+- The card shows `ar` with `by` under it. «نسخ النص» copies the quote only.
 - The quote font shrinks to fit, so longer quotes work, but keep them under about 200 characters. Run `?selftest` after you edit: it reports any quote or attribution that does not fit the card.
-- The fonts are the club site's Cairo files. `cairo-arabic.woff2` is used as is. `cairo-latin.woff2` is cut down to basic Latin and common punctuation. If an English quote uses an accented letter and it shows in the wrong font, copy the full `src/assets/fonts/cairo-latin.woff2` from the club site over it.
+- The fonts are the club site's Cairo files. `cairo-arabic.woff2` is used as is. `cairo-latin.woff2` is cut down to basic Latin and common punctuation. If a quote uses an accented Latin letter and it shows in the wrong font, copy the full `src/assets/fonts/cairo-latin.woff2` from the club site over it.
 
 ## Tap counts
 
 The page counts visits and button taps on GoatCounter: https://abdalrahmanpy.goatcounter.com
-It is anonymous and sets no cookies. The page sends the requests itself (`track()` in `app.js`), so no
+It is anonymous and sets no cookies. Open the page once with `?test` (for example `https://abdalrahman-py.github.io/quote/?test`) and that browser stops counting until you open it with `?test=off`; the card shows «وضع التجربة» as a reminder. The page sends the requests itself (`track()` in `app.js`), so no
 GoatCounter script is loaded. Runs on localhost are not counted.
 
 | Name on the dashboard | Counted when |
@@ -92,7 +93,7 @@ Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (err
 
 ## Notes for the workshop
 
-- **Save Image («حفظ الصورة»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the PNG to the gallery's Downloads.
+- **Save Image («حفظ الصورة»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the JPEG to the gallery's Downloads.
 - **Open Instagram («افتح Instagram»):** opens the Instagram home feed, where students tap + to post the Story. Android uses an intent link (opens the app, or its Play Store page). iPhone uses `https://www.instagram.com/`, which iOS hands to the Instagram app when it is installed.
 - **Scanner browsers:** some QR scanner apps open links in their own built-in browser, which can block downloads. If Save does nothing, open the page in Safari or Chrome.
 - **Story steps:** once a student has saved the image and copied the text, a sheet opens with five steps (open Instagram, pick the image, paste the text, add the **@ucas.it.club** mention sticker, share). «كيف أنشر الستوري؟» opens it any time.
