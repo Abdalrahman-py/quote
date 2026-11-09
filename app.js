@@ -219,11 +219,12 @@ $("copy").addEventListener("click", async () => {
   else try { window.prompt("انسخ النص:", caption); } catch { say("تعذّر النسخ"); }
 });
 
+// Both open the Instagram home feed, where students tap + to post a Story.
 // Android: intent URL (opens the app, or its Play Store page if missing).
-// iPhone and others follow the href: an instagram.com profile link, which iOS
-// opens in the Instagram app when installed (universal link) and in Safari when not.
-// instagram://app was dropped: Safari asks "Open in Instagram?" first, and an
-// uninstalled app gives an error page with no way back.
+// iPhone and others follow the href https://www.instagram.com/: Instagram's
+// apple-app-site-association claims "/*", so iOS opens the app when installed
+// and Safari when not. Used instead of instagram://app, which makes Safari ask
+// "Open in Instagram?" and shows an error page if the app is missing.
 $("ig").addEventListener("click", (e) => {
   if (/Android/i.test(navigator.userAgent)) { e.preventDefault(); location.href = IG_ANDROID; }
 });

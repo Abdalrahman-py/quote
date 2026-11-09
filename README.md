@@ -73,7 +73,7 @@ Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (err
 ## Notes for the workshop
 
 - **Save Image («حفظ الصورة»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the PNG to the gallery's Downloads.
-- **Open Instagram («افتح Instagram»):** on Android it opens the Instagram app (or its Play Store page). On iPhone it opens the club profile `instagram.com/ucas.it.club`, which iOS hands to the Instagram app when it is installed.
+- **Open Instagram («افتح Instagram»):** opens the Instagram home feed, where students tap + to post the Story. Android uses an intent link (opens the app, or its Play Store page). iPhone uses `https://www.instagram.com/`, which iOS hands to the Instagram app when it is installed.
 - **Scanner browsers:** some QR scanner apps open links in their own built-in browser, which can block downloads. If Save does nothing, open the page in Safari or Chrome.
 - Instagram cannot be filled in from a web page. Students must paste the caption and add the **@ucas.it.club** mention sticker by hand.
 
