@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>بطاقة اقتباس · UCAS IT Club</title>
+  <meta name="description" content="احصل على بطاقة اقتباس وشاركها في ستوري Instagram مع منشن @ucas.it.club">
+  <meta name="theme-color" content="#0d1726">
+  <meta name="color-scheme" content="dark">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Icons: Lucide (ISC license), same set the club website uses. -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+      <symbol id="i-ig" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></symbol>
+      <symbol id="i-new" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+      <symbol id="i-tr" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
+    </defs>
+  </svg>
+
+  <main>
+    <header>
+      <img src="assets/ucas-logo.webp" alt="" width="124" height="160">
+      <h1>النادي التكنولوجي</h1>
+    </header>
+
+    <figure class="stage">
+      <img id="card" width="1080" height="1920" alt="">
+      <p id="status" role="status" aria-live="polite"></p>
+    </figure>
+
+    <div class="steps">
+      <button id="save" class="step" type="button">
+        <svg aria-hidden="true"><use href="#i-save"/></svg>
+        حفظ الصورة
+      </button>
+      <button id="copy" class="step" type="button">
+        <svg aria-hidden="true"><use href="#i-copy"/></svg>
+        نسخ النص
+      </button>
+      <a id="ig" class="step" href="https://www.instagram.com/ucas.it.club/">
+        <svg aria-hidden="true"><use href="#i-ig"/></svg>
+        <bdi>افتح Instagram</bdi>
+      </a>
+    </div>
+
+    <div class="chips">
+      <button id="next" type="button">
+        <svg aria-hidden="true"><use href="#i-new"/></svg>
+        اقتباس جديد
+      </button>
+      <button id="tr" type="button" aria-pressed="false">
+        <svg aria-hidden="true"><use href="#i-tr"/></svg>
+        <span id="tr-label" lang="en">English</span>
+      </button>
+    </div>
+
+    <p class="hint">لا تنسَ منشن <bdi dir="ltr">@ucas.it.club</bdi> في الستوري</p>
+  </main>
+
+  <script src="quotes.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
