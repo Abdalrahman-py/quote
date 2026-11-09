@@ -58,6 +58,24 @@ Every quote is real and attributed. Sources, hadith gradings and notes are in `d
 - The quote font shrinks to fit, so longer quotes work, but keep them under about 200 characters. Run `?selftest` after you edit: it reports any quote or attribution that does not fit the card.
 - The fonts are the club site's Cairo files. `cairo-arabic.woff2` is used as is. `cairo-latin.woff2` is cut down to basic Latin and common punctuation. If an English quote uses an accented letter and it shows in the wrong font, copy the full `src/assets/fonts/cairo-latin.woff2` from the club site over it.
 
+## Tap counts
+
+The page counts visits and button taps on GoatCounter: https://abdalrahmanpy.goatcounter.com
+It is anonymous and sets no cookies. The page sends the requests itself (`track()` in `app.js`), so no
+GoatCounter script is loaded. Runs on localhost are not counted.
+
+| Name on the dashboard | Counted when |
+|---|---|
+| `/` | Someone opens the page |
+| `save` | «حفظ الصورة» finishes |
+| `copy` | «نسخ النص» copies the quote |
+| `instagram` | Someone taps an Instagram button |
+| `instagram-opened` | The page goes to the background within 3 s of that tap: the phone left for Instagram (the app, or instagram.com or the Play Store if the app is missing) |
+
+Ad blockers block GoatCounter, so the real numbers are a bit higher. No website can see whether a Story
+was posted; count the Story mentions of @ucas.it.club in the club's Instagram notifications for that
+(mentions disappear after 24 hours).
+
 ## Print the QR code
 
 Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (error correction H, 4-module quiet zone):

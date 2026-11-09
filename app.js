@@ -50,7 +50,7 @@ function wrap(text, font, maxW) {
 function layout(q, en = showTr) {
   const rtl = !en, text = textOf(q, en);
   let L;
-  for (let size = 112; size >= 40; size -= 4) {
+  for (let size = 84; size >= 40; size -= 4) {
     ctx.direction = rtl ? "rtl" : "ltr";
     const font = `900 ${size}px ${FONT}`;
     const lines = wrap(text, font, MAX_W);
@@ -106,7 +106,7 @@ function draw(q) {
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  // Hero header block: logo, club name in primary, college name muted, gradient rule.
+  // Hero header block: logo, club name in primary, gradient rule.
   if (logo.naturalWidth) {
     const h = 150, w = (logo.naturalWidth / logo.naturalHeight) * h;
     ctx.drawImage(logo, (W - w) / 2, SAFE + 20, w, h);
@@ -115,14 +115,11 @@ function draw(q) {
   ctx.font = `700 52px ${FONT}`;
   ctx.fillStyle = C.primary;
   ctx.fillText("النادي التكنولوجي", W / 2, 475);
-  ctx.font = `600 32px ${FONT}`;
-  ctx.fillStyle = C.muted;
-  ctx.fillText("الكلية الجامعية للعلوم التطبيقية", W / 2, 532);
   const rule = ctx.createLinearGradient(W / 2 - 80, 0, W / 2 + 80, 0);
   rule.addColorStop(0, C.blue);
   rule.addColorStop(1, C.green);
   ctx.fillStyle = rule;
-  ctx.fillRect(W / 2 - 80, 584, 160, 8); // not roundRect: missing before Safari 16 / Chrome 99
+  ctx.fillRect(W / 2 - 80, 540, 160, 8); // not roundRect: missing before Safari 16 / Chrome 99
 
   // Quote in the slogan's style: Cairo black, blue-to-green gradient (dark-theme inks).
   const L = layout(q);
@@ -167,6 +164,20 @@ function pickQuote() {
   lastIdx = i;
   try { sessionStorage.setItem("lastQuote", String(i)); } catch {}
   render(QUOTES[i]);
+}
+
+// Anonymous counts on GoatCounter, no cookies: https://abdalrahmanpy.goatcounter.com
+// Same request GoatCounter's count.js makes (beacon, image fallback). A name without a
+// leading "/" is an event; "/" is the page visit. Local test runs are not counted.
+const GC = "https://abdalrahmanpy.goatcounter.com/count";
+function track(name) {
+  if (location.protocol === "file:" || /^(localhost|127\.|\[::1\])/.test(location.hostname)) return;
+  const q = new URLSearchParams({ p: name, rnd: Math.random().toString(36).slice(2) });
+  if (!name.startsWith("/")) q.set("e", "1");
+  else if (document.referrer) q.set("r", document.referrer);
+  const url = `${GC}?${q}`;
+  try { if (navigator.sendBeacon?.(url)) return; } catch {}
+  new Image().src = url;
 }
 
 let sayTimer;
@@ -216,6 +227,7 @@ function setDone(id, on) {
 }
 function resetDone() { setDone("save", false); setDone("copy", false); }
 function markDone(id) {
+  track(id); // "save" or "copy"
   const first = !(done.save && done.copy);
   setDone(id, true);
   if (first && done.save && done.copy) setTimeout(openGuide, 600);
@@ -258,8 +270,16 @@ $("copy").addEventListener("click", async () => {
 // apple-app-site-association claims "/*", so iOS opens the app when installed
 // and Safari when not. Used instead of instagram://app, which makes Safari ask
 // "Open in Instagram?" and shows an error page if the app is missing.
+// The page going hidden within 3 s of the tap means the phone left for Instagram
+// (the app, or instagram.com / the Play Store when the app is missing).
+let igTap = 0;
 for (const a of document.querySelectorAll("[data-ig]")) a.addEventListener("click", (e) => {
+  track("instagram");
+  igTap = Date.now();
   if (/Android/i.test(navigator.userAgent)) { e.preventDefault(); location.href = IG_ANDROID; }
+});
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden && Date.now() - igTap < 3000) { igTap = 0; track("instagram-opened"); }
 });
 
 $("next").addEventListener("click", pickQuote);
@@ -295,4 +315,5 @@ function selfTest() {
   } catch {} // logo failed: card draws without it
   if (location.search.includes("selftest")) selfTest();
   pickQuote();
+  track("/");
 })();
