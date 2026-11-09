@@ -209,7 +209,7 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
 #guide[open] { display: flex; flex-direction: column; gap: 14px; animation: sheet-up .4s cubic-bezier(.16, 1, .3, 1); }
 #guide::backdrop { background: rgb(4 9 16 / .65); }
 @keyframes sheet-up { from { transform: translateY(100%); } }
-#guide h2 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+#guide h2 { margin: 0; font-size: 1.35rem; font-weight: 800; }
 #guide ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 10px; }
 #guide li { counter-increment: s; position: relative; min-height: 26px; padding-right: 38px; font-size: .95rem; line-height: 1.65; }
 #guide li::before {
