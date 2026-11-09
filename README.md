@@ -58,6 +58,12 @@ Edit `quotes.js`. Each entry is one object with both languages:
 
 ## Print the QR code
 
+Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (error correction H, 4-module quiet zone):
+
+- `qr/quote-qr.svg`: vector, use this for print.
+- `qr/quote-qr.png`: 1800 x 1800 px.
+
+
 - Make the QR code from the **final** GitHub Pages URL. Open the URL once to confirm it works before you generate the code.
 - Set error correction to **H** (high, 30%).
 - Print it at least **3 x 3 cm**. Make it bigger for posters or if people scan from far away.
