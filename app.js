@@ -13,7 +13,6 @@ const C = {
   blue: "#1864bc", teal: "#00a19a", green: "#73bf49",
 };
 const FONT = '"Cairo", system-ui, sans-serif';
-const TAGS = "@ucas.it.club #UCAS #UCAS_IT_Club #نادي_تكنولوجيا_المعلومات";
 const IG_ANDROID = "intent://instagram.com/#Intent;package=com.instagram.android;scheme=https;end";
 const FILE_NAME = "ucas-it-club-quote.png";
 
@@ -140,6 +139,7 @@ function draw(q) {
 function render(q) {
   current = q;
   draw(q);
+  resetDone(); // new image and text: save and copy again
   $("tr").setAttribute("aria-pressed", String(showTr));
   $("tr-label").textContent = showTr ? "العربية" : "English";
   $("tr-label").lang = showTr ? "ar" : "en";
@@ -196,8 +196,34 @@ function download() {
   a.click();
   a.remove();
   setTimeout(() => URL.revokeObjectURL(url), 10000);
-  say("تم حفظ الصورة");
 }
+
+// Save and copy turn into "done" buttons; when both are done, the Story steps open.
+const LABELS = { save: ["حفظ الصورة", "تم الحفظ"], copy: ["نسخ النص", "تم النسخ"] };
+const done = { save: false, copy: false };
+function setDone(id, on) {
+  done[id] = on;
+  const b = $(id);
+  b.classList.toggle("done", on);
+  b.querySelector(".lbl").textContent = LABELS[id][on ? 1 : 0];
+  b.querySelector("use").setAttribute("href", on ? "#i-check" : `#i-${id}`);
+}
+function resetDone() { setDone("save", false); setDone("copy", false); }
+function markDone(id) {
+  const first = !(done.save && done.copy);
+  setDone(id, true);
+  if (first && done.save && done.copy) setTimeout(openGuide, 600);
+}
+
+const guide = $("guide");
+function openGuide() {
+  if (guide.open) return;
+  if (guide.showModal) guide.showModal(); else guide.setAttribute("open", ""); // <dialog> before iOS 15.4
+}
+function closeGuide() { if (guide.close) guide.close(); else guide.removeAttribute("open"); }
+$("how").addEventListener("click", openGuide);
+$("guide-close").addEventListener("click", closeGuide);
+guide.addEventListener("click", (e) => { if (e.target === guide) closeGuide(); }); // tap on backdrop
 
 // iPhone downloads land in Files, but Instagram picks from Photos; the share
 // sheet has "Save Image", which goes to Photos. Elsewhere a plain download.
@@ -207,16 +233,17 @@ $("save").addEventListener("click", async () => {
   if (!blob) return say("لحظة…");
   const file = new File([blob], FILE_NAME, { type: "image/png" });
   if (IOS && navigator.canShare?.({ files: [file] })) {
-    try { await navigator.share({ files: [file] }); return; }
+    try { await navigator.share({ files: [file] }); markDone("save"); return; }
     catch (e) { if (e.name === "AbortError") return; }
   }
   download();
+  markDone("save");
 });
 
 $("copy").addEventListener("click", async () => {
-  const caption = `${textOf(current)}\n\n${TAGS}`;
-  if (await copyText(caption)) say("تم نسخ النص");
-  else try { window.prompt("انسخ النص:", caption); } catch { say("تعذّر النسخ"); }
+  const text = textOf(current);
+  if (await copyText(text)) return markDone("copy");
+  try { window.prompt("انسخ النص:", text); markDone("copy"); } catch { say("تعذّر النسخ"); }
 });
 
 // Both open the Instagram home feed, where students tap + to post a Story.
@@ -225,7 +252,7 @@ $("copy").addEventListener("click", async () => {
 // apple-app-site-association claims "/*", so iOS opens the app when installed
 // and Safari when not. Used instead of instagram://app, which makes Safari ask
 // "Open in Instagram?" and shows an error page if the app is missing.
-$("ig").addEventListener("click", (e) => {
+for (const a of document.querySelectorAll("[data-ig]")) a.addEventListener("click", (e) => {
   if (/Android/i.test(navigator.userAgent)) { e.preventDefault(); location.href = IG_ANDROID; }
 });
 

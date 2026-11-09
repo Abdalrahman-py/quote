@@ -174,8 +174,62 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
 .step:active::before, .chips button:active:not(:disabled)::before { opacity: 1; }
 :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 
-.hint { margin: 0; text-align: center; font-size: .85rem; color: var(--muted); }
+.step.done { border-color: var(--accent); }
+.step.done svg { color: var(--accent); }
+
+.how {
+  align-self: center;
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font-size: .85rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.how:hover { color: var(--fg); }
+
+/* Story steps: a bottom sheet. */
+#guide {
+  position: fixed;
+  top: auto; bottom: 0; left: 0; right: 0;
+  width: 100%;
+  max-width: 440px;
+  max-height: none;
+  margin: auto auto 0;
+  padding: 20px 20px max(16px, env(safe-area-inset-bottom));
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 24px 24px 0 0;
+  background: var(--surface);
+  color: var(--fg);
+}
+#guide[open] { display: flex; flex-direction: column; gap: 14px; animation: sheet-up .4s cubic-bezier(.16, 1, .3, 1); }
+#guide::backdrop { background: rgb(4 9 16 / .65); }
+@keyframes sheet-up { from { transform: translateY(100%); } }
+#guide h2 { margin: 0; font-size: 1.15rem; font-weight: 800; }
+#guide ol { margin: 0; padding: 0; list-style: none; counter-reset: s; display: grid; gap: 10px; }
+#guide li { counter-increment: s; position: relative; min-height: 26px; padding-right: 38px; font-size: .95rem; line-height: 1.65; }
+#guide li::before {
+  content: counter(s, arabic-indic);
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  color: var(--primary);
+  font-size: .85rem;
+  font-weight: 800;
+  line-height: 1;
+}
+#guide b { color: var(--primary); }
+#guide .cta { flex-direction: row; min-height: 52px; gap: 8px; }
 
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { transition: none !important; }
+  *, *::before, *::after { transition: none !important; animation: none !important; }
 }

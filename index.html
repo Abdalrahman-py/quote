@@ -17,6 +17,7 @@
       <symbol id="i-copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
       <symbol id="i-ig" viewBox="0 0 24 24"><rect width="20" height="20" x="2" y="2" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><path d="M17.5 6.5h.01"/></symbol>
       <symbol id="i-new" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
       <symbol id="i-tr" viewBox="0 0 24 24"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></symbol>
     </defs>
   </svg>
@@ -35,13 +36,13 @@
     <div class="steps">
       <button id="save" class="step" type="button">
         <svg aria-hidden="true"><use href="#i-save"/></svg>
-        حفظ الصورة
+        <span class="lbl">حفظ الصورة</span>
       </button>
       <button id="copy" class="step" type="button">
         <svg aria-hidden="true"><use href="#i-copy"/></svg>
-        نسخ النص
+        <span class="lbl">نسخ النص</span>
       </button>
-      <a id="ig" class="step" href="https://www.instagram.com/">
+      <a id="ig" class="step" href="https://www.instagram.com/" data-ig>
         <svg aria-hidden="true"><use href="#i-ig"/></svg>
         <bdi>افتح Instagram</bdi>
       </a>
@@ -58,8 +59,25 @@
       </button>
     </div>
 
-    <p class="hint">لا تنسَ منشن <bdi dir="ltr">@ucas.it.club</bdi> في الستوري</p>
+    <button id="how" class="how" type="button">كيف أنشر الستوري؟</button>
   </main>
+
+  <!-- Opens by itself once the image is saved and the text copied. -->
+  <dialog id="guide" aria-labelledby="guide-title">
+    <h2 id="guide-title">جاهز! انشرها في الستوري</h2>
+    <ol>
+      <li>افتح Instagram واضغط <b>+</b> ثم اختر <b>قصة</b></li>
+      <li>اختر صورة الاقتباس من المعرض</li>
+      <li>اضغط <b>Aa</b> والصق النص</li>
+      <li>أضف ملصق <b>@</b> واكتب <bdi dir="ltr">ucas.it.club</bdi></li>
+      <li>انشرها في <b>قصتك</b></li>
+    </ol>
+    <a class="step cta" href="https://www.instagram.com/" data-ig>
+      <svg aria-hidden="true"><use href="#i-ig"/></svg>
+      <bdi>افتح Instagram</bdi>
+    </a>
+    <button id="guide-close" class="how" type="button">إغلاق</button>
+  </dialog>
 
   <script src="quotes.js"></script>
   <script src="app.js"></script>

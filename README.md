@@ -52,7 +52,7 @@ Edit `quotes.js`. Each entry is one object with both languages:
 { ar: "النص العربي", en: "English version" },
 ```
 
-- The card shows `ar` by default. The "English" button swaps the whole quote to `en`, and the caption copies whichever language is showing.
+- The card shows `ar` by default. The "English" button swaps the whole quote to `en`, and «نسخ النص» copies whichever language is showing (the quote only).
 - Keep quotes short: 8 words or fewer in Arabic, 10 or fewer in English. Run `?selftest` after you edit: it reports any quote that is too long or does not fit the card.
 - The fonts are the club site's Cairo files. `cairo-arabic.woff2` is used as is. `cairo-latin.woff2` is cut down to basic Latin and common punctuation. If an English quote uses an accented letter and it shows in the wrong font, copy the full `src/assets/fonts/cairo-latin.woff2` from the club site over it.
 
@@ -68,14 +68,15 @@ Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (err
 - Set error correction to **H** (high, 30%).
 - Print it at least **3 x 3 cm**. Make it bigger for posters or if people scan from far away.
 - Keep a white margin (quiet zone) of at least 4 modules around the code. Print dark on light, never inverted.
-- Test the printed sample on an **iPhone** and on an **Android** phone before you print many copies. Test the full flow: scan, save image, copy caption, open Instagram, post a Story.
+- Test the printed sample on an **iPhone** and on an **Android** phone before you print many copies. Test the full flow: scan, save image, copy text, follow the steps sheet, open Instagram, post a Story.
 
 ## Notes for the workshop
 
 - **Save Image («حفظ الصورة»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the PNG to the gallery's Downloads.
 - **Open Instagram («افتح Instagram»):** opens the Instagram home feed, where students tap + to post the Story. Android uses an intent link (opens the app, or its Play Store page). iPhone uses `https://www.instagram.com/`, which iOS hands to the Instagram app when it is installed.
 - **Scanner browsers:** some QR scanner apps open links in their own built-in browser, which can block downloads. If Save does nothing, open the page in Safari or Chrome.
-- Instagram cannot be filled in from a web page. Students must paste the caption and add the **@ucas.it.club** mention sticker by hand.
+- **Story steps:** once a student has saved the image and copied the text, a sheet opens with five steps (open Instagram, pick the image, paste the text, add the **@ucas.it.club** mention sticker, share). «كيف أنشر الستوري؟» opens it any time.
+- Instagram cannot be filled in from a web page, so students paste the text and add the mention by hand.
 
 ## License
 
