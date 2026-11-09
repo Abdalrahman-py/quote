@@ -52,9 +52,9 @@ main {
   gap: 12px;
 }
 
-header { display: flex; align-items: center; justify-content: center; gap: 8px; }
-header img { height: 32px; width: auto; }
-h1 { margin: 0; font-size: 1.05rem; font-weight: 800; color: var(--fg); }
+header { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 6px 0 14px; }
+header img { height: 42px; width: auto; }
+h1 { margin: 0; font-size: 1.6rem; font-weight: 900; line-height: 1.2; color: var(--fg); }
 
 /* The card is the page. Everything else is sized around it.
    Side cards stick out past the column, so the page clips horizontal overflow. */
@@ -62,8 +62,8 @@ html, body { overflow-x: hidden; overflow-x: clip; }
 .stage {
   position: relative;
   margin: 0;
-  height: clamp(300px, calc(100vh - 218px), 680px); /* older phones without svh */
-  height: clamp(300px, calc(100svh - 218px), 680px);
+  height: clamp(300px, calc(100vh - 236px), 680px); /* older phones without svh */
+  height: clamp(300px, calc(100svh - 236px), 680px);
   touch-action: pan-y; /* horizontal drags are ours, vertical still scrolls */
   -webkit-user-select: none;
   user-select: none;
@@ -82,12 +82,9 @@ html, body { overflow-x: hidden; overflow-x: clip; }
   background: var(--bg);
   outline: 1px solid var(--line);
   box-shadow: 0 24px 48px -24px rgb(0 0 0 / .7);
-  transition: opacity .25s;
   -webkit-user-drag: none;
   -webkit-touch-callout: default; /* long-press to save still works on iPhone */
 }
-.stage.moving .card { transition: transform .38s cubic-bezier(.22, .8, .24, 1), opacity .38s; }
-.stage.dragging .card { transition: none; }
 .card.loading { opacity: 0 !important; } /* hide a recycled card until its new image is in */
 /* Card-shaped placeholder while the files load on a slow network. */
 .wait {
@@ -136,12 +133,12 @@ svg { width: 20px; height: 20px; flex: none; fill: none; stroke: currentColor; s
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .step {
   display: flex;
-  flex-direction: column;
+  flex-direction: row; /* RTL: the icon sits on the right of the label */
   align-items: center;
   justify-content: center;
   gap: 6px;
-  min-height: 72px;
-  padding: 10px 4px;
+  min-height: 50px;
+  padding: 6px 8px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface);

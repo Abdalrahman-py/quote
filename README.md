@@ -55,7 +55,7 @@ Edit `quotes.js`. Each entry is one object: the quote and the attribution shown 
 
 Every quote is real and attributed. Sources, hadith gradings and notes are in `docs/quotes-research.md`; the `/* n */` before each entry is its number there.
 
-- The card shows `ar` with `by` under it. «نسخ النص» copies the quote only.
+- The card shows `ar` with `by` under it. «نسخ» copies the quote only.
 - The quote font shrinks to fit, so longer quotes work, but keep them under about 200 characters. Run `?selftest` after you edit: it reports any quote or attribution that does not fit the card.
 - The fonts are the club site's Cairo files. `cairo-arabic.woff2` is used as is. `cairo-latin.woff2` is cut down to basic Latin and common punctuation. If a quote uses an accented Latin letter and it shows in the wrong font, copy the full `src/assets/fonts/cairo-latin.woff2` from the club site over it.
 
@@ -68,8 +68,8 @@ GoatCounter script is loaded. Runs on localhost are not counted.
 | Name on the dashboard | Counted when |
 |---|---|
 | `/` | Someone opens the page |
-| `save` | «حفظ الصورة» finishes |
-| `copy` | «نسخ النص» copies the quote |
+| `save` | «حفظ» finishes |
+| `copy` | «نسخ» copies the quote |
 | `instagram` | Someone taps an Instagram button |
 | `instagram-opened` | The page goes to the background within 3 s of that tap: the phone left for Instagram (the app, or instagram.com or the Play Store if the app is missing) |
 
@@ -93,8 +93,8 @@ Ready-made files for the live URL `https://abdalrahman-py.github.io/quote/` (err
 
 ## Notes for the workshop
 
-- **Save Image («حفظ الصورة»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the JPEG to the gallery's Downloads.
-- **Open Instagram («افتح Instagram»):** opens the Instagram home feed, where students tap + to post the Story. Android uses an intent link (opens the app, or its Play Store page). iPhone uses `https://www.instagram.com/`, which iOS hands to the Instagram app when it is installed.
+- **Save Image («حفظ»):** on iPhone it opens the share sheet; pick "Save Image" to put the card in Photos. On Android it downloads the JPEG to the gallery's Downloads.
+- **Open Instagram («Instagram»):** opens the Instagram home feed, where students tap + to post the Story. Android uses an intent link (opens the app, or its Play Store page). iPhone uses `https://www.instagram.com/`, which iOS hands to the Instagram app when it is installed.
 - **Scanner browsers:** some QR scanner apps open links in their own built-in browser, which can block downloads. If Save does nothing, open the page in Safari or Chrome.
 - **Story steps:** once a student has saved the image and copied the text, a sheet opens with five steps (open Instagram, pick the image, paste the text, add the **@ucas.it.club** mention sticker, share). «كيف أنشر الستوري؟» opens it any time.
 - Instagram cannot be filled in from a web page, so students paste the text and add the mention by hand.

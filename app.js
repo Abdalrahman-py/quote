@@ -79,7 +79,21 @@ function glow(x, y, r, color, alpha) {
   ctx.fillRect(0, 0, W, H);
 }
 
-function background() {
+// Seeded random (mulberry32): each quote gets its own lighting, the same every time it is
+// drawn in this visit (swiping back shows the same card); SALT changes it on the next visit.
+const SALT = Math.floor(Math.random() * 1e9);
+function rng(seed) {
+  return () => {
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function background(q) {
+  const r = rng(QUOTES.indexOf(q) * 7919 + SALT), between = (a, b) => a + r() * (b - a);
+  const pick = () => [C.primary, C.accent, C.teal][Math.floor(r() * 3)];
   ctx.fillStyle = C.bg;
   ctx.fillRect(0, 0, W, H);
   // Site's bg-grid-pattern, faded out by a radial mask like the hero.
@@ -89,36 +103,39 @@ function background() {
   for (let x = 0; x <= W; x += 90) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
   for (let y = 0; y <= H; y += 90) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
   ctx.stroke();
-  const mask = ctx.createRadialGradient(W / 2, H * 0.4, 200, W / 2, H * 0.4, 1150);
+  const my = H * between(0.32, 0.5);
+  const mask = ctx.createRadialGradient(W / 2, my, 200, W / 2, my, 1150);
   mask.addColorStop(0, "rgba(13,23,38,0)");
   mask.addColorStop(1, "rgba(13,23,38,1)");
   ctx.fillStyle = mask;
   ctx.fillRect(0, 0, W, H);
-  // The site's three soft brand glows.
-  glow(W - 40, 120, 620, C.primary, 0.16);
-  glow(-60, H * 0.55, 700, C.accent, 0.13);
-  glow(W * 0.75, H - 80, 560, C.primary, 0.12);
+  // Three soft brand glows (top, one side, bottom), placed and coloured per quote. Alphas stay low
+  // so the quote keeps its contrast.
+  glow(between(-60, W + 60), between(-80, 420), between(540, 720), pick(), between(0.12, 0.18));
+  glow(r() < 0.5 ? between(-120, 80) : between(W - 80, W + 120), H * between(0.4, 0.7), between(560, 760), pick(), between(0.1, 0.15));
+  glow(between(0, W), H - between(0, 260), between(480, 640), pick(), between(0.09, 0.14));
 }
 
 function draw(q) {
-  background();
+  background(q);
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
 
-  // Hero header block: logo, club name in primary, gradient rule.
-  if (logo.naturalWidth) {
-    const h = 150, w = (logo.naturalWidth / logo.naturalHeight) * h;
-    ctx.drawImage(logo, (W - w) / 2, SAFE + 20, w, h);
-  }
+  // Header row like the page: logo on the right of the club name (RTL), then a gradient rule.
+  const ROW_Y = 410, LOGO_H = 190, GAP = 28, name = "النادي التكنولوجي";
   ctx.direction = "rtl";
-  ctx.font = `700 52px ${FONT}`;
+  ctx.font = `800 66px ${FONT}`;
+  const tw = ctx.measureText(name).width;
+  const lw = logo.naturalWidth ? (logo.naturalWidth / logo.naturalHeight) * LOGO_H : 0;
+  const left = (W - (tw + (lw ? GAP + lw : 0))) / 2;
+  if (lw) ctx.drawImage(logo, left + tw + GAP, ROW_Y - LOGO_H / 2, lw, LOGO_H); // top 315, below the 250px safe area
   ctx.fillStyle = C.primary;
-  ctx.fillText("النادي التكنولوجي", W / 2, 475);
+  ctx.fillText(name, left + tw / 2, ROW_Y + 4);
   const rule = ctx.createLinearGradient(W / 2 - 80, 0, W / 2 + 80, 0);
   rule.addColorStop(0, C.blue);
   rule.addColorStop(1, C.green);
   ctx.fillStyle = rule;
-  ctx.fillRect(W / 2 - 80, 540, 160, 8); // not roundRect: missing before Safari 16 / Chrome 99
+  ctx.fillRect(W / 2 - 80, 548, 160, 8); // not roundRect: missing before Safari 16 / Chrome 99
 
   // Quote in the slogan's style: Cairo black, blue-to-green gradient (dark-theme inks).
   const L = layout(q);
@@ -163,19 +180,18 @@ for (let i = ORDER.length - 1; i > 0; i--) {
   const j = Math.floor(Math.random() * (i + 1));
   [ORDER[i], ORDER[j]] = [ORDER[j], ORDER[i]];
 }
-let pos = 0, drag = 0, busy = false;
+let pos = 0, drag = 0, anim = 0;
 let slides = [...stage.querySelectorAll(".card")];
 const MID = 2;
 const at = (d) => QUOTES[ORDER[(((pos + d) % ORDER.length) + ORDER.length) % ORDER.length]];
 const REDUCE = matchMedia("(prefers-reduced-motion: reduce)").matches;
-const TURN_MS = REDUCE ? 0 : 380;
+const TURN_MS = REDUCE ? 0 : 320;
 
 for (const el of slides) el.addEventListener("load", () => { el.classList.remove("loading"); stage.classList.add("ready"); });
 
 // Cards sit flat in a row: offset +1 right, 0 middle, -1 left.
-// drag (-1..1) slides the row; positive brings the next card to the middle.
-function place(animate) {
-  stage.classList.toggle("moving", animate);
+// drag slides the row; positive brings the next card toward the middle.
+function place() {
   slides.forEach((el, k) => {
     const o = Math.max(-2.6, Math.min(2.6, MID - k + drag)), a = Math.abs(o);
     el.style.transform = `translateX(calc(${o} * (100% + 14px))) scale(${1 - Math.min(a, 1) * 0.08})`;
@@ -210,37 +226,49 @@ function paintAll(force) {
   showCurrent();
 }
 
-// dir +1: next quote, -1: previous. The hidden card that falls off one end is recycled to the other end.
-function turn(dir) {
-  if (busy) return;
-  busy = true;
-  fill(slides[MID + 2 * dir]); // very fast swipes: the hidden card that becomes a side card must be drawn now
-  drag = dir;
-  place(true);
-  setTimeout(() => {
-    pos += dir;
-    if (dir > 0) slides.push(slides.shift()); else slides.unshift(slides.pop());
-    drag = 0;
-    place(false);
-    fillLater(slides[dir > 0 ? slides.length - 1 : 0]); // recycled card, now hidden on the far side
-    showCurrent();
-    busy = false;
-  }, TURN_MS);
+// Move the current position by dir (+1 next, -1 previous) right away, keeping every card where it
+// is on screen (drag absorbs the step). The hidden card that falls off one end goes to the other end.
+function shift(dir) {
+  pos += dir;
+  if (dir > 0) slides.push(slides.shift()); else slides.unshift(slides.pop());
+  drag -= dir;
+  fill(slides[MID + dir]); // the new side card; normally already drawn as a hidden buffer
+  fillLater(slides[dir > 0 ? slides.length - 1 : 0]);
+  showCurrent();
 }
 
-// Swipe: follow the finger, then turn if it went far or fast enough. A tap on a side card turns to it.
-let x0 = null, t0 = 0, moved = false;
+// Ease drag to 0 with requestAnimationFrame. JS (not a CSS transition) so a new touch can grab
+// the row mid-animation and carry on from where it is: swipes are never locked out.
+function settle() {
+  cancelAnimationFrame(anim);
+  const from = drag, start = performance.now();
+  const step = (now) => {
+    const p = TURN_MS ? Math.min(1, (now - start) / TURN_MS) : 1;
+    drag = from * Math.pow(1 - p, 3); // ease-out
+    place();
+    if (p < 1) anim = requestAnimationFrame(step);
+  };
+  anim = requestAnimationFrame(step);
+}
+
+function turn(dir) { shift(dir); settle(); }
+
+// Swipe: the row follows the finger; passing half a card moves on, so one long drag can pass
+// several cards. On release a flick or a drag past 22% moves one more. A tap on a side card turns to it.
+let x0 = null, t0 = 0, base = 0, moved = false, dx = 0;
 stage.addEventListener("pointerdown", (e) => {
-  if (busy || e.button > 0) return;
-  x0 = e.clientX; t0 = performance.now(); moved = false;
+  if (e.button > 0) return;
+  cancelAnimationFrame(anim); // grab the row where it is
+  x0 = e.clientX; t0 = performance.now(); base = drag; moved = false; dx = 0;
 });
 stage.addEventListener("pointermove", (e) => {
   if (x0 === null) return;
-  const dx = e.clientX - x0;
+  dx = e.clientX - x0;
   if (!moved && Math.abs(dx) < 8) return;
   if (!moved) { moved = true; stage.setPointerCapture?.(e.pointerId); stage.classList.add("dragging"); }
-  drag = Math.max(-1, Math.min(1, dx / slides[MID].offsetWidth));
-  place(false);
+  drag = base + dx / slides[MID].offsetWidth;
+  while (Math.abs(drag) > 0.5) { const d = Math.sign(drag); shift(d); base -= d; }
+  place();
 });
 function release(e) {
   if (x0 === null) return;
@@ -248,14 +276,14 @@ function release(e) {
   stage.classList.remove("dragging");
   if (!moved) {
     const k = slides.indexOf(e.target);
-    if (e.type === "pointerup" && (k === MID - 1 || k === MID + 1)) turn(k > MID ? 1 : -1);
-    return;
+    if (e.type === "pointerup" && (k === MID - 1 || k === MID + 1)) return turn(k > MID ? 1 : -1);
+    return settle();
   }
-  const fast = Math.abs(drag) > 0.06 && performance.now() - t0 < 250;
-  if (Math.abs(drag) > 0.22 || fast) return turn(Math.sign(drag));
-  drag = 0;
-  place(true); // spring back
-  setTimeout(() => stage.classList.remove("moving"), TURN_MS);
+  const dir = Math.sign(dx);
+  const fast = Math.abs(dx) > 20 && Math.abs(dx) / (performance.now() - t0) > 0.5; // px per ms
+  if (fast && drag * dir > -0.2) return turn(dir);
+  if (drag * dir > 0.22) return turn(dir); // only onward: a negative rest after passing a card settles on that card
+  settle();
 }
 stage.addEventListener("pointerup", release);
 stage.addEventListener("pointercancel", release);
@@ -322,7 +350,7 @@ function download(blob) {
 }
 
 // Save and copy turn into "done" buttons; when both are done, the Story steps open.
-const LABELS = { save: ["حفظ الصورة", "تم الحفظ"], copy: ["نسخ النص", "تم النسخ"] };
+const LABELS = { save: ["حفظ", "تم الحفظ"], copy: ["نسخ", "تم النسخ"] };
 const done = { save: false, copy: false };
 function setDone(id, on) {
   done[id] = on;
@@ -414,7 +442,7 @@ function selfTest() {
   // Slow network: after 4 s draw with what has arrived, and redraw once the fonts and logo are in.
   await Promise.race([assets, new Promise((r) => setTimeout(() => { late = true; r(); }, 4000))]);
   if (location.search.includes("selftest")) selfTest();
-  place(false);
+  place();
   paintAll();
   assets.then(() => { if (late) paintAll(true); });
   if (testMode) say("وضع التجربة: لن تُحتسب ضغطاتك");
