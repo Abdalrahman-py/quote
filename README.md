@@ -46,14 +46,16 @@ The page needs HTTPS for the Clipboard API and the iPhone share sheet. GitHub Pa
 
 ## Add or change quotes
 
-Edit `quotes.js`. Each entry is one object with both languages:
+Edit `quotes.js`. Each entry is one object with both languages and the attribution shown under the quote:
 
 ```js
-{ ar: "النص العربي", en: "English version" },
+{ ar: "النص العربي", en: "English version", by: { ar: "القائل", en: "Author" } },
 ```
 
+Every quote is real and attributed. Sources, hadith gradings and notes are in `docs/quotes-research.md`; the `/* n */` before each entry is its number there.
+
 - The card shows `ar` by default. The "English" button swaps the whole quote to `en`, and «نسخ النص» copies whichever language is showing (the quote only).
-- Keep quotes short: 8 words or fewer in Arabic, 10 or fewer in English. Run `?selftest` after you edit: it reports any quote that is too long or does not fit the card.
+- The quote font shrinks to fit, so longer quotes work, but keep them under about 200 characters. Run `?selftest` after you edit: it reports any quote or attribution that does not fit the card.
 - The fonts are the club site's Cairo files. `cairo-arabic.woff2` is used as is. `cairo-latin.woff2` is cut down to basic Latin and common punctuation. If an English quote uses an accented letter and it shows in the wrong font, copy the full `src/assets/fonts/cairo-latin.woff2` from the club site over it.
 
 ## Print the QR code

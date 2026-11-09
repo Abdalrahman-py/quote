@@ -5,7 +5,7 @@
 const W = 1080, H = 1920;
 const SAFE = 250;                    // Instagram UI covers top/bottom 250px
 const PAD = 100, MAX_W = W - PAD * 2;
-const QUOTE_TOP = 640, QUOTE_BOTTOM = 1560, BOX_H = QUOTE_BOTTOM - QUOTE_TOP;
+const QUOTE_TOP = 640, QUOTE_BOTTOM = 1500, BOX_H = QUOTE_BOTTOM - QUOTE_TOP;
 // Site tokens (src/styles.css, .dark) and logo colours.
 const C = {
   bg: "#0d1726", fg: "#e8eff8", muted: "#adbdd1",
@@ -28,6 +28,8 @@ try { lastIdx = Number(sessionStorage.getItem("lastQuote") ?? -1); } catch {}
 
 // Arabic by default; the "English" toggle swaps the whole quote.
 const textOf = (q, en = showTr) => (en ? q.en : q.ar).trim();
+const byOf = (q, en = showTr) => (q.by ? (en ? q.by.en : q.by.ar) : ""); // stale cached quotes.js has no "by"
+const BY_FONT = `600 38px ${FONT}`;
 
 // Greedy word wrap measured with the real font. Arabic words never break
 // mid-word; canvas shapes each candidate line, so widths include joining.
@@ -134,6 +136,10 @@ function draw(q) {
   ctx.fillStyle = ink;
   for (const line of L.lines) { ctx.fillText(line, W / 2, y + L.lh / 2); y += L.lh; }
 
+  // Attribution under the quote, inside Instagram's bottom safe area (ends by 1600 < 1670).
+  ctx.font = BY_FONT;
+  ctx.fillStyle = C.muted;
+  if (byOf(q)) ctx.fillText("— " + byOf(q), W / 2, y + 60);
 }
 
 function render(q) {
@@ -261,10 +267,10 @@ $("next").addEventListener("click", pickQuote);
 $("tr").addEventListener("click", () => { showTr = !showTr; render(current); });
 
 function selfTest() {
-  const words = (t) => t.trim().split(/\s+/).length;
   for (const q of QUOTES) {
-    console.assert(words(q.ar) <= 8 && words(q.en) <= 10, "quote too long (max 8 Arabic / 10 English words)", q);
     for (const en of [false, true]) {
+      ctx.font = BY_FONT;
+      console.assert(ctx.measureText("— " + byOf(q, en)).width <= MAX_W, "attribution wider than card", q);
       const L = layout(q, en);
       ctx.font = L.font;
       console.assert(L.lines.join(" ") === L.text.split(/\s+/).join(" "), "wrap lost or reordered words", q);
